@@ -1,0 +1,171 @@
+<html>
+
+<head>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser-ce/2.9.3/phaser.min.js">//importing phaser code</script>
+	<style>
+		html,
+		body,
+		#game {
+			height: 100%
+		}
+
+		body {
+			margin: 0;
+			padding: 0;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="game"></div>
+</body>
+<script>
+	window.onload = function () {
+		let game = new Phaser.Game("100%", "100%", Phaser.CANVAS, 'game', { preload: preload, create: create, update: update });//sets size of screen, allows it to run without server, add id (AUTO - allows you to serve it)
+		let bat
+		let food
+		let cursors
+		let direction = 'left'
+		let score = 0
+		let scoreText
+		let batSpinning = false
+		let cake
+
+		function preload() {
+			game.load.spritesheet('bat', 'bat.png', 160, 130) //loads bat image
+			game.load.spritesheet('food', 'food.png', 130, 130)
+		}
+
+		function create() {
+			game.scale.scaleMode = Phaser.ScaleManager.RESIZE
+
+			game.stage.backgroundColor = '8470ff' //change background color
+			game.physics.startSystem(Phaser.Physics.ARCADE) //adds physics ability
+
+			bat = game.add.sprite(200, 200, 'bat') //places bat on screen
+			game.physics.enable(bat, food, cake, Phaser.Physics.ARCADE) //gives bat the physics ability
+			bat.animations.add('fly', [0, 1, 2, 1], 10, true) // animates bat, array of all three pics, speed, true(loops)
+			bat.animations.play('fly') //allows it to animate
+			bat.anchor.setTo(0.5) //sets anchor of picture to middle
+
+
+			cursors = game.input.keyboard.createCursorKeys(); //shows if keys are down
+
+			scoreText = game.add.text(10, 10, `Score: ${score}`, {
+				font: '20px Arial',
+				fill: '#000000'
+			})
+
+			game.time.events.loop(Phaser.Timer.SECOND, changeScore, this)
+
+			food = game.add.group()
+			food.enableBody = true
+			food.physicsBodyType = Phaser.Physics.ARCADE
+			food.createMultiple(10, 'food', 50, true)
+			food.forEach(placeRandomly, this)
+			food.setAll('scale.x', 0.45)
+			food.setAll('scale.y', 0.45)
+
+			cake = game.add.group()
+			cake.enableBody = true
+			cake.physicsBodyType = Phaser.Physics.ARCADE
+			cake.createMultiple(4, 'food', 77, true)
+			cake.forEach(placeRandomly, this)
+			cake.setAll('scale.x', 0.65)
+			cake.setAll('scale.y', 0.65)
+		}
+
+		function update() { //everything that happens 60x a second
+
+			food.forEach(moveFood, this)
+			cake.forEach(moveFood, this)
+
+			controllingTheBat()
+			makingItWrap()
+
+			if (batSpinning) {
+				bat.angle += 10
+				if (bat.angle == 0) {
+					batSpinning = false
+				}
+			}
+			else {
+				game.physics.arcade.overlap(bat, food, foodHit)
+			}
+
+			game.physics.arcade.overlap(bat, cake, cakeHit)
+		}
+
+		function controllingTheBat() {
+			if (cursors.left.isDown) {
+				if (direction === 'right') {
+					bat.scale.x *= -1
+					direction = 'left'
+				}
+				bat.x -= 9
+			}
+			if (cursors.right.isDown) {
+				if (direction === 'left') {
+					bat.scale.x *= -1
+					direction = 'right'
+				}
+				bat.x += 9
+			}
+			if (cursors.up.isDown) {
+				bat.y -= 9
+			}
+			if (cursors.down.isDown) {
+				bat.y += 9
+			}
+		}
+
+		function makingItWrap() {
+			if (bat.x < 0) {
+				bat.x = game.width
+			}
+			if (bat.x > game.width) {
+				bat.x = 0
+			}
+			if (bat.y < 0) {
+				bat.y = 0
+			}
+			if (bat.y > game.height) {
+				bat.y = game.height
+			}
+		}
+
+		function changeScore() {
+			score += 10
+			scoreText.setText(`Score: ${score}`)
+		}
+
+		function placeRandomly(piece) {
+			piece.y = game.rnd.between(-150, -800)
+			piece.x = game.world.randomX
+		}
+
+		function moveFood(piece) {
+			piece.y += 3
+			if (piece.y > game.height) {
+				placeRandomly(piece)
+			}
+		}
+
+		function foodHit(bat, piece) {
+			console.log("Hit!")
+			score -= 100
+			placeRandomly(piece)
+
+			batSpinning = true
+		}
+
+		function cakeHit(bat, piece) {
+			console.log("Score!")
+			score += 100
+			placeRandomly(piece)
+
+		}
+	}
+</script>
+
+</html>

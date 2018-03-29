@@ -30,16 +30,18 @@
 		let scoreText
 		let batSpinning = false
 		let cake
+		let sound
 
 		function preload() {
 			game.load.spritesheet('bat', 'bat.png', 160, 130) //loads bat image
 			game.load.spritesheet('food', 'food.png', 130, 130)
+			game.load.audio('sound', 'sound.mp3')
 		}
 
 		function create() {
 			game.scale.scaleMode = Phaser.ScaleManager.RESIZE
 
-			game.stage.backgroundColor = '8470ff' //change background color
+			game.stage.backgroundColor = 'ffffff' //change background color
 			game.physics.startSystem(Phaser.Physics.ARCADE) //adds physics ability
 
 			bat = game.add.sprite(200, 200, 'bat') //places bat on screen
@@ -61,7 +63,7 @@
 			food = game.add.group()
 			food.enableBody = true
 			food.physicsBodyType = Phaser.Physics.ARCADE
-			food.createMultiple(10, 'food', 50, true)
+			food.createMultiple(10, 'food', 212, true)
 			food.forEach(placeRandomly, this)
 			food.setAll('scale.x', 0.45)
 			food.setAll('scale.y', 0.45)
@@ -69,13 +71,15 @@
 			cake = game.add.group()
 			cake.enableBody = true
 			cake.physicsBodyType = Phaser.Physics.ARCADE
-			cake.createMultiple(4, 'food', 77, true)
+			cake.createMultiple(4, 'food', 55, true)
 			cake.forEach(placeRandomly, this)
 			cake.setAll('scale.x', 0.65)
 			cake.setAll('scale.y', 0.65)
+
+			sound = game.sound.play('sound')
 		}
 
-		function update() { //everything that happens 60x a second
+		function update() {
 
 			food.forEach(moveFood, this)
 			cake.forEach(moveFood, this)
@@ -137,6 +141,10 @@
 		function changeScore() {
 			score += 10
 			scoreText.setText(`Score: ${score}`)
+			if (score < -500) {
+				alert("You Lost! Better luck next time!")
+				location.reload()
+			}
 		}
 
 		function placeRandomly(piece) {
@@ -152,18 +160,15 @@
 		}
 
 		function foodHit(bat, piece) {
-			console.log("Hit!")
 			score -= 100
 			placeRandomly(piece)
-
 			batSpinning = true
+			sound.play()
 		}
 
 		function cakeHit(bat, piece) {
-			console.log("Score!")
 			score += 100
 			placeRandomly(piece)
-
 		}
 	}
 </script>
